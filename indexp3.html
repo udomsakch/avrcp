@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCOT RADIO avrcp POC</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+      background-color: #f9f9f9;
+    }
+
+    h1 {
+      font-size: 6vw;
+      margin-bottom: 10px;
+    }
+
+    select, audio {
+      margin-top: 15px;
+      font-size: 4vw;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    #stationName {
+      font-size: 4.5vw;
+      margin-top: 15px;
+    }
+
+    img {
+      width: 80%;
+      max-width: 300px;
+      height: auto;
+      margin-top: 20px;
+      border-radius: 12px;
+    }
+
+    @media (min-width: 600px) {
+      h1 {
+        font-size: 32px;
+      }
+
+      select, audio {
+        font-size: 18px;
+      }
+
+      #stationName {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>MCOT RADIO</h1>
+
+  <label for="stationSelect">เลือกสถานี:</label><br>
+  <select id="stationSelect">
+    <option value="0">สถานี 1: Thinking Radio 96.5 Mhz.</option>
+    <option value="1">สถานี 2: LTM FM95 95Mhz.</option>
+    <option value="2">สถานี 3: Active Radio 99 Mhz.</option>
+    <option value="3">สถานี 4: MCOT News 100.5 Mhz.</option>
+    <option value="4">สถานี 5: Smooth FM 105.5 Mhz.</option>
+  </select>
+
+  <p id="stationName">สถานี: News Radio</p>
+  <audio id="audioPlayer" controls autoplay></audio>
+  <img id="albumArt" src="" alt="Album Art">
+
+  <script>
+    const stations = [
+      {
+        name: "Thinking Radio 96.5 Mhz.",
+        stream: "http://rstream.mcot.net:9106/;stream.mp3",
+        artist: "MCOT News",
+        title: "ข่าวเด่นวันนี้",
+        album: "ข่าวประจำวัน",
+        artwork: "965.png"
+      },
+      {
+        name: " LTM FM95 95Mhz.",
+        stream: "http://rstream.mcot.net:9098/;stream.mp3",
+        artist: "DJ Pop",
+        title: "เพลงฮิต",
+        album: "Top 40",
+        artwork: "95.jpg"
+      },
+      {
+        name: "Active Radio 99 Mhz.",
+        stream: "http://rstream.mcot.net:9042/;stream.mp3",
+        artist: "DJ Rock",
+        title: "Rocking Now",
+        album: "Rock Album",
+        artwork: "99.png"
+      },
+      {
+        name: "MCOT News 100.5 Mhz.",
+        stream: "http://rstream.mcot.net:9032/;stream.mp3",
+        artist: "Smooth DJ",
+        title: "Evening Jazz",
+        album: "Jazz Collection",
+        artwork: "1005.jpg"
+      },
+      {
+        name: "Smooth FM 105.5 Mhz.",
+        stream: "http://rstream.mcot.net:9018/;stream.mp3",
+        artist: "DJ Chill",
+        title: "Relax Moment",
+        album: "Chill Beats",
+        artwork: "1055.png"
+      }
+    ];
+
+    const stationSelect = document.getElementById('stationSelect');
+    const audio = document.getElementById('audioPlayer');
+    const stationName = document.getElementById('stationName');
+    const albumArt = document.getElementById('albumArt');
+
+    let currentStationIndex = 0;
+
+    function updateStation(index) {
+      const station = stations[index];
+      currentStationIndex = index;
+      audio.src = station.stream;
+      stationName.textContent = `สถานี: ${station.name}`;
+      albumArt.src = station.artwork;
+
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: station.title,
+          artist: station.artist,
+          album: station.album,
+          artwork: [{ src: station.artwork, sizes: "512x512", type: "image/jpeg" }]
+        });
+
+        navigator.mediaSession.setActionHandler('play', () => audio.play());
+        navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+        navigator.mediaSession.setActionHandler('previoustrack', () => {
+          const prevIndex = (currentStationIndex - 1 + stations.length) % stations.length;
+          stationSelect.value = prevIndex;
+          updateStation(prevIndex);
+        });
+        navigator.mediaSession.setActionHandler('nexttrack', () => {
+          const nextIndex = (currentStationIndex + 1) % stations.length;
+          stationSelect.value = nextIndex;
+          updateStation(nextIndex);
+        });
+      }
+    }
+
+    updateStation(0);
+
+    stationSelect.addEventListener('change', (e) => {
+      updateStation(parseInt(e.target.value));
+    });
+  </script>
+</body>
+</html>

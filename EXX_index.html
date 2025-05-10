@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>MCOT RADIO avrcp POC</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#800080">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+      margin-bottom: 100px;
+    }
+    select, audio {
+      margin-top: 15px;
+      font-size: 16px;
+      width: 90%;
+      max-width: 400px;
+    }
+    img {
+      max-width: 80%;
+      height: auto;
+      margin-top: 20px;
+      border-radius: 12px;
+    }
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: #800080;
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2);
+    }
+    .bottom-bar button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 5vw;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>MCOT RADIO</h1>
+  <img id="albumArt" src="" alt="Album Art">
+
+  <p id="stationName">สถานี: News Radio</p>
+  <audio id="audioPlayer" controls autoplay></audio>
+<br>
+  <label for="stationSelect">เลือกสถานี:</label>
+  <select id="stationSelect">
+    <option value="0">สถานี 2: LTM FM95 95Mhz.</option>
+    <option value="1">สถานี 1: Thinking Radio 96.5 Mhz.</option>
+    <option value="2">สถานี 3: Active Radio 99 Mhz.</option>
+    <option value="3">สถานี 4: MCOT News 100.5 Mhz.</option>
+    <option value="4">สถานี 5: Smooth FM 105.5 Mhz.</option>
+    <option value="5">สถานี 6: MET FM 107 Mhz.</option>
+  </select>
+
+  <div class="bottom-bar">
+    <button onclick="changeStation(-1)">⏮</button>
+    <button onclick="audio.paused ? audio.play() : audio.pause()">▶️/⏸️</button>
+    <button onclick="changeStation(1)">⏭</button>
+  </div>
+
+  <script>
+    const stations = [
+      {
+        name: " LTM FM95 95 Mhz.",
+        stream: "http://live-org-01-cdn.mcot.net:1935/tencentradio/fm95.stream_aac/playlist.m3u8",
+        artist: "DJname#95",
+        title: "รายการ xx @FM95 Mhz.",
+        album: "Top 40",
+        artwork: "fm95.png"
+      }, 
+      {
+        name: "Thinking Radio 96.5 Mhz.",
+        stream: "http://live-org-01-cdn.mcot.net:1935/tencentradio/fm965.stream_aac/playlist.m3u8",
+        artist: "DJname#96.5",
+        title: "รายการ xx @FM96.5Mhz.",
+        album: "ข่าวประจำวัน",
+        artwork: "fm965.png"
+      },
+      {
+        name: "Active Radio 99 Mhz.",
+        stream: "http://live-org-01-cdn.mcot.net:1935/tencentradio/fm99.stream_aac/playlist.m3u8",
+        artist: "DJname#99",
+        title: "รายการ xx @FM99 Mhz.",
+        album: "Rock Album",
+        artwork: "fm99.png"
+      },
+      {
+        name: "MCOT News 100.5 Mhz.",
+        stream: "http://live-org-01-cdn.mcot.net:1935//tencentradio/fm1005.stream_aac/playlist.m3u8",
+        artist: "DJname#100.5",
+        title: "รายการ xx @FM100.5Mhz.",
+        album: "Jazz Collection",
+        artwork: "fm1005.png"
+      },
+      {
+        name: "Smooth FM 105.5 Mhz.",
+        stream: "http://live-org-01-cdn.mcot.net:1935/tencentradio/fm1055.stream_aac/playlist.m3u8",
+        artist: "DJname#105.5",
+        title: "รายการ xx @FM105.5 Mhz.",
+        album: "Chill Beats",
+        artwork: "fm1055.png"
+      },
+      {
+        name: "MET FM 107 Mhz.",
+        stream: "http://live-org-01-cdn.mcot.net:1935/tencentradio/fm107.stream_aac/playlist.m3u8",
+        artist: "DJname#107",
+        title: "รายการ xx @FM107 Mhz.",
+        album: "Chill Beats",
+        artwork: "fm107.png"
+      }
+    ];
+
+    const stationSelect = document.getElementById('stationSelect');
+    const audio = document.getElementById('audioPlayer');
+    const stationName = document.getElementById('stationName');
+    const albumArt = document.getElementById('albumArt');
+    let currentStationIndex = 0;
+
+    function updateStation(index) {
+      const station = stations[index];
+      currentStationIndex = index;
+      audio.src = station.stream;
+      stationName.textContent = `สถานี: ${station.name}`;
+      albumArt.src = station.artwork;
+
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: station.title,
+          artist: station.artist,
+          album: station.album,
+          artwork: [
+            { src: station.artwork, sizes: "512x512", type: "image/jpeg" }
+          ]
+        });
+
+        navigator.mediaSession.setActionHandler('play', () => audio.play());
+        navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+        navigator.mediaSession.setActionHandler('previoustrack', () => changeStation(-1));
+        navigator.mediaSession.setActionHandler('nexttrack', () => changeStation(1));
+      }
+    }
+
+    function changeStation(direction) {
+      const newIndex = (currentStationIndex + direction + stations.length) % stations.length;
+      stationSelect.value = newIndex;
+      updateStation(newIndex);
+    }
+
+    stationSelect.addEventListener('change', (e) => {
+      updateStation(parseInt(e.target.value));
+    });
+
+    updateStation(0);
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('✅ Service Worker Registered'));
+    }
+  </script>
+</body>
+</html>
